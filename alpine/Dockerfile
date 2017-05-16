@@ -108,7 +108,33 @@ RUN set -xe && \
 
     # Create working dir
     mkdir -p $APP_ROOT && \
-    chown -R www-data:www-data /app/web
+    chown -R www-data:www-data /app/web && \
+
+    # Clean up root crontab
+    truncate -s 0 /etc/crontabs/root && \
+
+    # Cleanup
+    su-exec www-data composer clear-cache && \
+    docker-php-source delete && \
+    apk del --purge \
+        *-dev \
+        autoconf \
+        build-base \
+        cmake \
+        libtool && \
+
+    rm -rf \
+        /usr/src/php.tar.xz \
+        /usr/src/php/ext/memcached \
+        /usr/src/php/ext/uploadprogress \
+        /usr/include/php \
+        /usr/lib/php/build \
+        /var/cache/apk/* \
+        /tmp/* \
+        /root/.composer
+
+# config composer PATH
+ENV PATH "/home/www-data/.composer/vendor/bin:$PATH"
 
 # config china mirror
 RUN composer config -g repo.packagist composer https://packagist.phpcomposer.com
