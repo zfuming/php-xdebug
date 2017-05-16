@@ -31,12 +31,14 @@ RUN pecl install memcached
 RUN pecl install xdebug
 
 # drush command
-ADD ./drush.phar /usr/local/bin/drush
-RUN chmod +x /usr/local/bin/drush
+RUN curl -fsSL -o /usr/local/bin/drush "https://github.com/drush-ops/drush/releases/download/$DRUSH_VERSION/drush.phar" && \
+    chmod +x /usr/local/bin/drush
 
 # install composer
-ADD ./composer.phar /usr/local/bin/composer
-RUN chmod +x /usr/local/bin/composer
+RUN php -r "readfile('https://getcomposer.org/installer');" > composer-setup.php && \
+    php composer-setup.php && \
+    php -r "unlink('composer-setup.php');" && \
+    mv composer.phar /usr/local/bin/composer
 
 # config china mirror
 RUN composer config -g repo.packagist composer https://packagist.phpcomposer.com
