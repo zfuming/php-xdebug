@@ -1,50 +1,133 @@
-FROM php:7.1.3-fpm
+FROM php:7.1.3-fpm-alpine
+
 ENV DRUSH_VERSION 8.1.2
+ENV APP_ROOT /app/web
 
-RUN apt-get clean -y
-# Install the PHP extensions we need
+# Recreate user with correct params
+RUN deluser www-data && \
+	addgroup -g 82 -S www-data && \
+	adduser -u 82 -D -S -s /bin/bash -G www-data www-data && \
+	sed -i '/^www-data/s/!/*/' /etc/shadow
 
-RUN apt-get update && \
-apt-get install -y --no-install-recommends \
-    curl \
-    mysql-client \
-    libmemcached-dev \
-    libz-dev \
-    libzip-dev \
-    libpq-dev \
-    libjpeg-dev \
-    libpng12-dev \
-    libfreetype6-dev \
-    libicu-dev \
-    libssl-dev \
-    libmemcached-dev \
-    zlib1g-dev \
-    libmcrypt-dev && \
-    docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr && \
-    docker-php-ext-install gd pdo_mysql mysqli opcache intl bcmath zip mcrypt sockets && \
-    docker-php-ext-enable bcmath zip pdo_mysql mcrypt sockets
+RUN set -xe && \
+    apk add --update \
+        bash \
+        bzip2 \
+        ca-certificates \
+        c-client \
+        git \
+        gzip \
+        icu-libs \
+        imagemagick \
+        imap \
+        libbz2 \
+        libjpeg-turbo \
+        libmcrypt \
+        libpng \
+        libxslt \
+        make \
+        mariadb-client \
+        libmemcached-libs \
+        openssh \
+        openssh-client \
+        openssl \
+        patch \
+        postgresql-client \
+        rsync \
+        su-exec \
+        tar \
+        wget \
+        yaml \
 
-# install memcached 
-RUN pecl install memcached
+        # Temporarily packages to compile extensions
+        autoconf \
+        cmake \
+        build-base \
+        bzip2-dev \
+        freetype-dev \
+        icu-dev \
+        imagemagick-dev \
+        imap-dev \
+        jpeg-dev \
+        libjpeg-turbo-dev \
+        libmemcached-dev \
+        libmcrypt-dev \
+        libpng-dev \
+        libtool \
+        libxslt-dev \
+        openldap-dev \
+        pcre-dev \
+        postgresql-dev \
+        yaml-dev && \
 
-# install xdebug
-RUN pecl install xdebug
+    docker-php-source extract && \
 
-# drush command
-ADD ./drush.phar /usr/local/bin/drush
-RUN chmod +x /usr/local/bin/drush
+    docker-php-ext-install \
+        bcmath \
+        bz2 \
+        calendar \
+        exif \
+        imap \
+        intl \
+        ldap \
+        mcrypt \
+        mysqli \
+        opcache \
+        pdo_mysql \
+        pdo_pgsql \
+        pgsql \
+        phar \
+        soap \
+        sockets \
+        xmlrpc \
+        xsl \
+        zip && \
 
-# install composer
-ADD ./composer.phar /usr/local/bin/composer
-RUN chmod +x /usr/local/bin/composer
+    # GD
+    docker-php-ext-configure gd \
+        --with-gd \
+        --with-freetype-dir=/usr/include/ \
+        --with-png-dir=/usr/include/ \
+        --with-jpeg-dir=/usr/include/ && \
+      NPROC=$(getconf _NPROCESSORS_ONLN) && \
+      docker-php-ext-install -j${NPROC} gd && \
 
-# config china mirror
-RUN composer config -g repo.packagist composer https://packagist.phpcomposer.com
+    # PECL extensions
+    pecl config-set php_ini "$PHP_INI_DIR/php.ini" && \
 
-# install drupal console
-RUN curl https://drupalconsole.com/installer -L -o drupal.phar && \
-    mv drupal.phar /usr/local/bin/drupal && \
-    chmod +x /usr/local/bin/drupal
+    # pecl install extensions
+    pecl install \
+        amqp \
+        apcu \
+        oauth \
+        imagick \
+        mongodb \
+        redis \
+        xdebug-2.5.1 \
+        yaml-2.0.0 && \
 
-VOLUME /app/web
-WORKDIR /app/web
+    docker-php-ext-enable \
+        amqp \
+        apcu \
+        oauth \
+        imagick \
+        mongodb \
+        redis \
+        xdebug \
+        yaml && \
+
+    # Install composer
+    wget -qO- https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
+
+    # Install drush
+    wget -qO- https://github.com/drush-ops/drush/releases/download/$DRUSH_VERSION/drush.phar > /usr/local/bin/drush && \
+    chmod +x /usr/local/bin/drush && \
+
+    # Create working dir
+    mkdir -p $APP_ROOT && \
+    chown -R www-data:www-data /app/web
+
+WORKDIR $APP_ROOT
+EXPOSE 9000
+
+CMD ["php-fpm"]
