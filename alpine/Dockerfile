@@ -96,25 +96,8 @@ RUN set -xe && \
     pecl config-set php_ini "$PHP_INI_DIR/php.ini" && \
 
     # pecl install extensions
-    pecl install \
-        amqp \
-        apcu \
-        oauth \
-        imagick \
-        mongodb \
-        redis \
-        xdebug-2.5.1 \
-        yaml-2.0.0 && \
-
-    docker-php-ext-enable \
-        amqp \
-        apcu \
-        oauth \
-        imagick \
-        mongodb \
-        redis \
-        xdebug \
-        yaml && \
+    pecl install xdebug && \
+    docker-php-ext-enable xdebug && \
 
     # Install composer
     wget -qO- https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
