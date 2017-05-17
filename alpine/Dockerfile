@@ -95,6 +95,9 @@ RUN set -xe && \
     # PECL extensions
     pecl config-set php_ini "$PHP_INI_DIR/php.ini" && \
 
+    # install memcached
+    RUN pecl install memcached && \
+
     # pecl install extensions
     pecl install xdebug && \
     docker-php-ext-enable xdebug && \
