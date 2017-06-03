@@ -24,9 +24,6 @@ apt-get install -y --no-install-recommends \
     docker-php-ext-install gd pdo_mysql mysqli opcache intl bcmath zip mcrypt sockets && \
     docker-php-ext-enable bcmath zip pdo_mysql mcrypt sockets
 
-# install memcached
-RUN pecl install memcached
-
 # install xdebug
 RUN pecl install xdebug
 
