@@ -12,6 +12,7 @@ RUN deluser www-data && \
 RUN set -xe && \
     apk add --update \
         bash \
+        git \
         bzip2 \
         ca-certificates \
         c-client \
@@ -97,6 +98,9 @@ RUN set -xe && \
 
     # install memcached
     RUN pecl install memcached && \
+
+    # install redis
+    RUN pecl install redis && \
 
     # pecl install extensions
     pecl install xdebug && \

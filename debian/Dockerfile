@@ -7,6 +7,7 @@ RUN apt-get clean -y
 RUN apt-get update && \
 apt-get install -y --no-install-recommends \
     curl \
+    git \
     mysql-client \
     libmemcached-dev \
     libz-dev \
@@ -29,6 +30,9 @@ RUN pecl install memcached
 
 # install xdebug
 RUN pecl install xdebug
+
+# install redis
+RUN pecl install redis
 
 # drush command
 RUN curl -fsSL -o /usr/local/bin/drush "https://github.com/drush-ops/drush/releases/download/$DRUSH_VERSION/drush.phar" && \
